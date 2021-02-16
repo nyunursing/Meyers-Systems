@@ -82,6 +82,7 @@ New-Variable -Scope global -Name gstrEmailSubject -Value ((Get-Date -Format "yyy
 
 ##Dev or Prod
 New-Variable -Scope global -Name gbolProd -Value $False
+New-Variable -Scope global -Name gbolTest -Value $True       #Enables/Disables commands that actually change things on the server
 If($gbolProd -eq $False){
     #Dev
     #Email Settings
@@ -225,14 +226,13 @@ Function VMWareMove(){
 
         #Start/Stop Website(s)
         If($ServiceState -eq [enumServiceState]::Start){
-            iisreset /start
+            If ($gbolTest -eq $False){iisreset /start}
             $strSettingChanges = UpdateString -strInfo $strSEttingChanges -strUpdate ($TAB + "IIS Started" + $CRLF + "----------" + $CRLF )
         }
         Else{
-            iisreset /stop
+            If ($gbolTest -eq $False){iisreset /stop}
             $strSettingChanges = UpdateString -strInfo $strSEttingChanges -strUpdate ($TAB + "IIS Stopped" + $CRLF + "--------------------" + $CRLF )
         }
-
     }
     
     #Determine What other Services Are Installed
@@ -252,14 +252,14 @@ Function VMWareMove(){
                     #Start Service
                     If($objServices[$i].Status -ne "Running" ){
                         $strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "Status: " + $objServices[$I].Status +  " ---> Started" + $CRLF )
-                        Start-Service -Name ($objServices[$i].Name)
+                        If ($gbolTest -eq $False){Start-Service -Name ($objServices[$i].Name)}
                     }
                     Else{$strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "Status: " + $objServices[$I].Status +  " ---> NO CHANGE" + $CRLF )}
                     
                     #Change Startup Option
                     If($objServices[$i].StartType -ne "Automatic"){
                         $strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "StartUp: " + $objServices[$I].StartType +  " ---> Automatic" + $CRLF )
-                        Set-service -Name ($objServices[$i].Name) -StartupType Automatic
+                        If ($gbolTest -eq $False){Set-service -Name ($objServices[$i].Name) -StartupType Automatic}
                     }
                     Else{$strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "StartUp: " + $objServices[$I].StartType +  " ---> NO CHANGE" + $CRLF )}
                 }
@@ -267,14 +267,14 @@ Function VMWareMove(){
                     #Stop Service
                     If($objServices[$i].Status -ne "Stopped" ){
                         $strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "Status: " + $objServices[$I].Status +  " ---> Stopped" + $CRLF )
-                        Stop-Service -Force -Name ($objServices[$i].Name)
+                        If ($gbolTest -eq $False){Stop-Service -Force -Name ($objServices[$i].Name)}
                     }
                     Else{$strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "Status: " + $objServices[$I].Status +  " ---> NO CHANGE" + $CRLF )}
                     
                     #Change Startup Option
                     If($objServices[$i].StartType -ne "Manual"){
                         $strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "StartUp: " + $objServices[$I].StartType +  " ---> Manual" + $CRLF )
-                        Set-service -Name ($objServices[$i].Name) -StartupType Manual
+                        If ($gbolTest -eq $False){Set-service -Name ($objServices[$i].Name) -StartupType Manual}
                     }
                     Else{$strSettingChanges = UpdateString -strInfo $strSettingChanges -strUpdate ($TAB + $TAB + "StartUp: " + $objServices[$I].StartType +  " ---> NO CHANGE" + $CRLF )}
                 }
